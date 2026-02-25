@@ -98,8 +98,100 @@ services:
     volumes:
       - miniodata:/data
 
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrantdata:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+
+  # --- Application services ---
+
+  pymander-api:
+    build: .
+    command: uvicorn pymander.api.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-reddit:
+    build: .
+    command: python -m pymander.ingestion.adapters.reddit
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-news:
+    build: .
+    command: python -m pymander.ingestion.adapters.news
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-embedding:
+    build: .
+    command: python -m pymander.pipeline.embedding
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    profiles: ["app"]
+
+  pymander-clustering:
+    build: .
+    command: python -m pymander.pipeline.clustering
+    env_file: .env
+    depends_on:
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-engagement:
+    build: .
+    command: python -m pymander.pipeline.engagement_poller
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-image-hasher:
+    build: .
+    command: python -m pymander.pipeline.image_hasher
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
 volumes:
   pgdata:
   neo4jdata:
   esdata:
   miniodata:
+  qdrantdata:

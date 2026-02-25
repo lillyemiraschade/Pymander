@@ -12,6 +12,11 @@ ENRICHED = "enriched.content"
 NARRATIVE_EVENTS = "narrative.events"
 NETWORK_EVENTS = "network.events"
 
+# Phase 2 topics
+MEDIA_TO_HASH = "media.to_hash"
+VELOCITY_UPDATES = "processed.velocity_updates"
+VELOCITY_ANOMALIES = "alerts.velocity_anomaly"
+
 ALL_RAW_TOPICS = [
     RAW_TWITTER,
     RAW_REDDIT,
@@ -22,4 +27,11 @@ ALL_RAW_TOPICS = [
     RAW_WEB,
 ]
 
-ALL_TOPICS = ALL_RAW_TOPICS + [ENRICHED, NARRATIVE_EVENTS, NETWORK_EVENTS]
+ALL_TOPICS = ALL_RAW_TOPICS + [
+    ENRICHED,
+    NARRATIVE_EVENTS,
+    NETWORK_EVENTS,
+    MEDIA_TO_HASH,
+    VELOCITY_UPDATES,
+    VELOCITY_ANOMALIES,
+]

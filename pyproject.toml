@@ -17,6 +17,23 @@ dependencies = [
     "structlog>=24.4,<26",
     "httpx>=0.28,<1",
     "pgvector>=0.3,<1",
+    # Phase 2: Ingestion
+    "asyncpraw>=7.8,<8",
+    "feedparser>=6.0,<7",
+    "trafilatura>=2.0,<3",
+    "aiohttp>=3.11,<4",
+    # Phase 2: Intelligence pipeline
+    "sentence-transformers>=3.3,<4",
+    "hdbscan>=0.8,<1",
+    "qdrant-client>=1.12,<2",
+    "numpy>=1.26,<3",
+    # Phase 2: Image hashing
+    "imagehash>=4.3,<5",
+    "Pillow>=11,<12",
+    # Phase 2: Narrative validation
+    "anthropic>=0.42,<1",
+    # Phase 2: Dashboard
+    "websockets>=14,<15",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +59,8 @@ line-length = 99
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
+per-file-ignores = {"src/pymander/narrative/validator.py" = ["E501"]}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

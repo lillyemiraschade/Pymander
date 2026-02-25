@@ -14,6 +14,9 @@ TOPICS=(
   "enriched.content"
   "narrative.events"
   "network.events"
+  "media.to_hash"
+  "processed.velocity_updates"
+  "alerts.velocity_anomaly"
 )
 
 for topic in "${TOPICS[@]}"; do

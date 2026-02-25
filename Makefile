@@ -73,3 +73,9 @@ predictions:
 
 identity:
 	uv run python -m pymander.intelligence.identity
+
+ingestion:
+	uv run python -m pymander.pipeline.ingestion_consumer
+
+embedding:
+	uv run python -m pymander.pipeline.embedding

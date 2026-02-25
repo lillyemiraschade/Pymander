@@ -14,7 +14,7 @@ from sentence_transformers import SentenceTransformer
 from pymander.core.config import get_settings
 from pymander.core.metrics import MetricsCollector
 from pymander.ingestion.consumer import KafkaConsumerWrapper
-from pymander.ingestion.topics import RAW_REDDIT, RAW_RSS
+from pymander.ingestion.topics import ALL_RAW_TOPICS
 from pymander.schemas.content import UnifiedContentRecord
 
 logger = structlog.get_logger()
@@ -134,8 +134,7 @@ class EmbeddingPipeline:
         await self.setup()
 
         consumer = KafkaConsumerWrapper(
-            RAW_REDDIT,
-            RAW_RSS,
+            *ALL_RAW_TOPICS,
             group_id="pymander-embedding",
         )
         await consumer.start()
@@ -183,7 +182,8 @@ async def main() -> None:
     redis = Redis.from_url(settings.redis.url)
     metrics = MetricsCollector(redis)
     qdrant = AsyncQdrantClient(
-        host=settings.qdrant.host, port=settings.qdrant.port
+        host=settings.qdrant.host, port=settings.qdrant.port,
+        check_compatibility=False,
     )
 
     pipeline = EmbeddingPipeline(qdrant, metrics)

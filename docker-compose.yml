@@ -232,6 +232,19 @@ services:
         condition: service_healthy
     profiles: ["app"]
 
+  pymander-ingestion:
+    build: .
+    command: python -m pymander.pipeline.ingestion_consumer
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
   # --- Pipeline services ---
 
   pymander-embedding:

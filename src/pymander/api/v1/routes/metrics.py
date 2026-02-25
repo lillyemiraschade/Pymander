@@ -11,7 +11,10 @@ from pymander.core.metrics import MetricsCollector
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
-PLATFORMS = ["reddit", "rss", "twitter", "telegram", "youtube", "4chan", "web"]
+PLATFORMS = [
+    "reddit", "rss", "twitter", "telegram", "youtube",
+    "4chan", "web", "wikipedia", "substack", "google_trends",
+]
 
 
 async def _get_metrics(redis: Redis) -> MetricsCollector:

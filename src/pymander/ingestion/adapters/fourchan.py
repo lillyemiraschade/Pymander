@@ -401,7 +401,7 @@ class FourChanPoller:
                         ingested_count += 1
 
                 await self.metrics.increment(
-                    "fourchan.posts.ingested",
+                    "4chan.posts.ingested",
                     value=ingested_count,
                     tags={"board": board},
                 )
@@ -418,7 +418,7 @@ class FourChanPoller:
                     error=str(exc),
                 )
                 await self.metrics.increment(
-                    "fourchan.errors", tags={"board": board}
+                    "4chan.errors", tags={"board": board}
                 )
 
             await asyncio.sleep(self.POLL_INTERVAL)

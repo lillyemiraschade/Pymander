@@ -41,9 +41,35 @@ dev:
 topics:
 	bash scripts/create_topics.sh
 
-# Dashboard
+# Internal observability dashboard
 dashboard-dev:
 	cd dashboard && npm run dev
 
 dashboard-build:
 	cd dashboard && npm run build
+
+# Production client dashboard
+client-dashboard-dev:
+	cd dashboard-client && npm install && npm run dev
+
+client-dashboard-build:
+	cd dashboard-client && npm install && npm run build
+
+# Run specific services locally
+graph-builder:
+	uv run python -m pymander.network.graph_builder
+
+coordination:
+	uv run python -m pymander.intelligence.coordination
+
+behavioral:
+	uv run python -m pymander.intelligence.behavioral_signals
+
+briefings:
+	uv run python -m pymander.intelligence.briefings
+
+predictions:
+	uv run python -m pymander.intelligence.prediction
+
+identity:
+	uv run python -m pymander.intelligence.identity

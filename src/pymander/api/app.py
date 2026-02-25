@@ -11,9 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from pymander.api.v1.router import v1_router
+from pymander.api.v2.router import v2_router
 from pymander.core.config import get_settings
 from pymander.core.constants import API_V1_PREFIX
 from pymander.core.logging import setup_logging
+
+API_V2_PREFIX = "/api/v2"
 
 
 @asynccontextmanager
@@ -40,6 +43,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(v1_router, prefix=API_V1_PREFIX)
+    app.include_router(v2_router, prefix=API_V2_PREFIX)
 
     # Serve dashboard static files if built
     dashboard_dir = Path(__file__).parent.parent.parent.parent / "dashboard" / "dist"

@@ -34,6 +34,27 @@ dependencies = [
     "anthropic>=0.42,<1",
     # Phase 2: Dashboard
     "websockets>=14,<15",
+    # Phase 3: Network graph
+    "neo4j>=5.24,<6",
+    "networkx>=3.2,<4",
+    # Phase 3: Identity resolution
+    "python-Levenshtein>=0.26,<1",
+    # Phase 3: Additional adapters
+    "tweepy>=4.14,<5",
+    "telethon>=1.37,<2",
+    "google-api-python-client>=2.150,<3",
+    "youtube-transcript-api>=0.6,<1",
+    "pytrends>=4.9,<5",
+    # Phase 3: Behavioral signals
+    "scipy>=1.11,<2",
+    "dtw-python>=1.5,<2",
+    # Phase 4: API auth
+    "pyjwt>=2.9,<3",
+    "passlib[bcrypt]>=1.7,<2",
+    # Phase 4: Briefings
+    "jinja2>=3.1,<4",
+    # Phase 4: SSE
+    "sse-starlette>=2.0,<3",
 ]
 
 [project.optional-dependencies]
@@ -60,7 +81,7 @@ line-length = 99
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
 ignore = ["B008"]  # FastAPI Depends() in defaults is idiomatic
-per-file-ignores = {"src/pymander/narrative/validator.py" = ["E501"]}
+per-file-ignores = {"src/pymander/narrative/validator.py" = ["E501"], "src/pymander/intelligence/briefings.py" = ["E501"], "src/pymander/intelligence/coordination.py" = ["E501"], "src/pymander/network/analytics.py" = ["E501"]}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

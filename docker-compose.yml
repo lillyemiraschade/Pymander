@@ -26,14 +26,20 @@ services:
       retries: 5
 
   neo4j:
-    image: neo4j:5
+    image: neo4j:5-community
     ports:
       - "7474:7474"
       - "7687:7687"
     environment:
       NEO4J_AUTH: neo4j/pymander
+      NEO4J_PLUGINS: '["graph-data-science"]'
     volumes:
       - neo4jdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p pymander 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   elasticsearch:
     image: elasticsearch:8.12.0
@@ -108,7 +114,7 @@ services:
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
 
-  # --- Application services ---
+  # === Application services (use `docker compose --profile app up`) ===
 
   pymander-api:
     build: .
@@ -124,6 +130,8 @@ services:
       kafka:
         condition: service_healthy
     profiles: ["app"]
+
+  # --- Ingestion services ---
 
   pymander-reddit:
     build: .
@@ -146,6 +154,85 @@ services:
       redis:
         condition: service_healthy
     profiles: ["app"]
+
+  pymander-twitter:
+    build: .
+    command: python -m pymander.ingestion.adapters.twitter
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-4chan:
+    build: .
+    command: python -m pymander.ingestion.adapters.fourchan
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-telegram:
+    build: .
+    command: python -m pymander.ingestion.adapters.telegram
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-youtube:
+    build: .
+    command: python -m pymander.ingestion.adapters.youtube
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-wikipedia:
+    build: .
+    command: python -m pymander.ingestion.adapters.wikipedia
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-bluesky:
+    build: .
+    command: python -m pymander.ingestion.adapters.bluesky
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-substack:
+    build: .
+    command: python -m pymander.ingestion.adapters.substack
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  # --- Pipeline services ---
 
   pymander-embedding:
     build: .
@@ -185,6 +272,98 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  # --- Intelligence services ---
+
+  pymander-graph-builder:
+    build: .
+    command: python -m pymander.network.graph_builder
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-co-narrative:
+    build: .
+    command: python -m pymander.network.co_narrative
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-graph-analytics:
+    build: .
+    command: python -m pymander.network.analytics
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-coordination:
+    build: .
+    command: python -m pymander.intelligence.coordination
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-identity:
+    build: .
+    command: python -m pymander.intelligence.identity
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-behavioral:
+    build: .
+    command: python -m pymander.intelligence.behavioral_signals
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-briefings:
+    build: .
+    command: python -m pymander.intelligence.briefings
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    profiles: ["app"]
+
+  pymander-predictions:
+    build: .
+    command: python -m pymander.intelligence.prediction
+    env_file: .env
+    depends_on:
       redis:
         condition: service_healthy
     profiles: ["app"]

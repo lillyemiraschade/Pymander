@@ -82,7 +82,7 @@ class NarrativeClusterer:
         """Fetch embeddings from the last LOOKBACK_HOURS hours."""
         cutoff = (
             datetime.now(UTC) - timedelta(hours=LOOKBACK_HOURS)
-        ).isoformat()
+        ).timestamp()
 
         points = []
         offset = None
@@ -92,7 +92,7 @@ class NarrativeClusterer:
                 scroll_filter=Filter(
                     must=[
                         FieldCondition(
-                            key="created_at",
+                            key="created_at_ts",
                             range=Range(gte=cutoff),
                         )
                     ]
@@ -280,7 +280,8 @@ async def main() -> None:
     producer = KafkaProducerWrapper()
     await producer.start()
     qdrant = AsyncQdrantClient(
-        host=settings.qdrant.host, port=settings.qdrant.port
+        host=settings.qdrant.host, port=settings.qdrant.port,
+        api_key=settings.qdrant.api_key or None,
     )
 
     clusterer = NarrativeClusterer(qdrant, redis, metrics, producer)

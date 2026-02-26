@@ -18,10 +18,18 @@ class KafkaProducerWrapper:
 
     async def start(self) -> None:
         settings = get_settings()
-        self._producer = AIOKafkaProducer(
-            bootstrap_servers=settings.kafka.bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v, default=str).encode(),
-        )
+        kwargs: dict = {
+            "bootstrap_servers": settings.kafka.bootstrap_servers,
+            "value_serializer": lambda v: json.dumps(v, default=str).encode(),
+        }
+        if settings.kafka.security_protocol != "PLAINTEXT":
+            kwargs.update({
+                "security_protocol": settings.kafka.security_protocol,
+                "sasl_mechanism": settings.kafka.sasl_mechanism,
+                "sasl_plain_username": settings.kafka.sasl_username,
+                "sasl_plain_password": settings.kafka.sasl_password,
+            })
+        self._producer = AIOKafkaProducer(**kwargs)
         await self._producer.start()
         logger.info("kafka_producer_started")
 

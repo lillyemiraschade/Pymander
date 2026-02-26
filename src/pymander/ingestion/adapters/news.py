@@ -27,6 +27,20 @@ from pymander.schemas.enums import ContentType, Platform
 
 logger = structlog.get_logger()
 
+# Domains that block scraping (paywalls, 403s, slow timeouts).
+# We still ingest RSS metadata + summary but skip full-text extraction.
+SKIP_FULLTEXT_DOMAINS = {
+    "nytimes.com",
+    "washingtonpost.com",
+    "bloomberg.com",
+    "wsj.com",
+    "ft.com",
+    "economist.com",
+}
+
+# Trafilatura fetch timeout (seconds) — default is 30 which is too slow.
+FETCH_TIMEOUT = 8
+
 NEWS_RSS_FEEDS = {
     # Top US outlets
     "nyt": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
@@ -57,10 +71,24 @@ NEWS_RSS_FEEDS = {
 POLL_INTERVAL = 300  # 5 minutes
 
 
+def _is_paywalled(url: str) -> bool:
+    """Check if a URL belongs to a known paywalled domain."""
+    from urllib.parse import urlparse
+
+    hostname = urlparse(url).hostname or ""
+    return any(domain in hostname for domain in SKIP_FULLTEXT_DOMAINS)
+
+
 def extract_full_article(url: str) -> dict:
     """Extract full article text from URL using trafilatura."""
+    if _is_paywalled(url):
+        return {"text": "", "title": "", "skipped": "paywalled_domain"}
     try:
-        downloaded = trafilatura.fetch_url(url)
+        from trafilatura.settings import use_config
+
+        config = use_config()
+        config.set("DEFAULT", "DOWNLOAD_TIMEOUT", str(FETCH_TIMEOUT))
+        downloaded = trafilatura.fetch_url(url, config=config)
         if downloaded:
             result = trafilatura.extract(
                 downloaded,
@@ -243,15 +271,15 @@ class NewsPoller:
         return count
 
     async def run(self) -> None:
-        """Poll all feeds in a loop."""
+        """Poll all feeds concurrently in a loop."""
         logger.info("news_poller_starting", feeds=len(self.feeds))
         while self._running:
-            total = 0
-            for name, url in self.feeds.items():
-                if not self._running:
-                    break
-                count = await self.poll_feed(name, url)
-                total += count
+            tasks = [
+                self.poll_feed(name, url)
+                for name, url in self.feeds.items()
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            total = sum(r for r in results if isinstance(r, int))
             await self.metrics.gauge("news.feeds.monitored", len(self.feeds))
             logger.info("news_poll_cycle_complete", new_articles=total)
             await asyncio.sleep(POLL_INTERVAL)

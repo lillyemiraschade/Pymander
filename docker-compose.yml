@@ -41,22 +41,6 @@ services:
       timeout: 10s
       retries: 10
 
-  elasticsearch:
-    image: elasticsearch:8.12.0
-    ports:
-      - "9200:9200"
-    environment:
-      discovery.type: single-node
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     ports:
@@ -91,18 +75,6 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     depends_on:
       - kafka
-
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    volumes:
-      - miniodata:/data
 
   qdrant:
     image: qdrant/qdrant:v1.7.4
@@ -384,6 +356,4 @@ services:
 volumes:
   pgdata:
   neo4jdata:
-  esdata:
-  miniodata:
   qdrantdata:

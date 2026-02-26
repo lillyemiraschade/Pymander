@@ -17,6 +17,10 @@ class KafkaSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="KAFKA_")
     bootstrap_servers: str = "localhost:9092"
     group_id: str = "pymander"
+    sasl_username: str = ""
+    sasl_password: str = ""
+    sasl_mechanism: str = "SCRAM-SHA-256"
+    security_protocol: str = "PLAINTEXT"
 
 
 class RedisSettings(BaseSettings):
@@ -29,19 +33,6 @@ class Neo4jSettings(BaseSettings):
     uri: str = "bolt://localhost:7687"
     user: str = "neo4j"
     password: str = "pymander"
-
-
-class ElasticsearchSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="ELASTICSEARCH_")
-    url: str = "http://localhost:9200"
-
-
-class MinioSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="MINIO_")
-    endpoint: str = "localhost:9000"
-    access_key: str = "minioadmin"
-    secret_key: str = "minioadmin"
-    secure: bool = False
 
 
 class RedditSettings(BaseSettings):
@@ -90,6 +81,7 @@ class QdrantSettings(BaseSettings):
     port: int = 6333
     grpc_port: int = 6334
     collection_name: str = "content_embeddings"
+    api_key: str = ""
 
 
 class AnthropicSettings(BaseSettings):
@@ -120,8 +112,6 @@ class Settings(BaseSettings):
     kafka: KafkaSettings = Field(default_factory=KafkaSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     neo4j: Neo4jSettings = Field(default_factory=Neo4jSettings)
-    es: ElasticsearchSettings = Field(default_factory=ElasticsearchSettings)
-    minio: MinioSettings = Field(default_factory=MinioSettings)
     reddit: RedditSettings = Field(default_factory=RedditSettings)
     twitter: TwitterSettings = Field(default_factory=TwitterSettings)
     telegram: TelegramSettings = Field(default_factory=TelegramSettings)

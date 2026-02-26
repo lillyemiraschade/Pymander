@@ -21,13 +21,20 @@ class KafkaConsumerWrapper:
 
     async def start(self) -> None:
         settings = get_settings()
-        self._consumer = AIOKafkaConsumer(
-            *self._topics,
-            bootstrap_servers=settings.kafka.bootstrap_servers,
-            group_id=self._group_id or settings.kafka.group_id,
-            value_deserializer=lambda v: json.loads(v.decode()),
-            auto_offset_reset="earliest",
-        )
+        kwargs: dict = {
+            "bootstrap_servers": settings.kafka.bootstrap_servers,
+            "group_id": self._group_id or settings.kafka.group_id,
+            "value_deserializer": lambda v: json.loads(v.decode()),
+            "auto_offset_reset": "earliest",
+        }
+        if settings.kafka.security_protocol != "PLAINTEXT":
+            kwargs.update({
+                "security_protocol": settings.kafka.security_protocol,
+                "sasl_mechanism": settings.kafka.sasl_mechanism,
+                "sasl_plain_username": settings.kafka.sasl_username,
+                "sasl_plain_password": settings.kafka.sasl_password,
+            })
+        self._consumer = AIOKafkaConsumer(*self._topics, **kwargs)
         await self._consumer.start()
         logger.info("kafka_consumer_started", topics=self._topics)
 

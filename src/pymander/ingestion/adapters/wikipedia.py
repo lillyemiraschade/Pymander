@@ -64,10 +64,19 @@ EDIT_VOLUME_WINDOW = 3600  # 1 hour for rate tracking
 # How long between reconnection attempts on stream failure.
 RECONNECT_DELAY = 5
 
+# Rate limiting: max events per minute to avoid flooding downstream.
+MAX_EVENTS_PER_MINUTE = 60
+_RATE_WINDOW = 60  # seconds
+
+# Tighter prefix matching — require title to *start with* the prefix
+# to avoid matching every article that mentions "Russia" or "United States".
+_EXACT_MATCH_PREFIXES = {p.lower() for p in HIGH_SIGNAL_PREFIXES}
+
 
 def _is_high_signal(title: str) -> bool:
-    """Return True if the page title matches a high-signal prefix."""
-    return any(prefix.lower() in title.lower() for prefix in HIGH_SIGNAL_PREFIXES)
+    """Return True if the page title starts with a high-signal prefix."""
+    lower = title.lower()
+    return any(lower.startswith(prefix) for prefix in _EXACT_MATCH_PREFIXES)
 
 
 def _change_to_record(change: dict) -> UnifiedContentRecord:
@@ -253,11 +262,26 @@ class WikipediaPoller:
         logger.info("wikipedia_poller_starting")
         await self._adapter.connect()
 
+        # Rate limiting state.
+        _window_start = asyncio.get_event_loop().time()
+        _window_count = 0
+
         while self._running:
             try:
                 async for record in self._adapter.fetch():
                     if not self._running:
                         break
+
+                    # --- rate limiter ---
+                    now = asyncio.get_event_loop().time()
+                    if now - _window_start >= _RATE_WINDOW:
+                        _window_start = now
+                        _window_count = 0
+                    if _window_count >= MAX_EVENTS_PER_MINUTE:
+                        await asyncio.sleep(_RATE_WINDOW - (now - _window_start))
+                        _window_start = asyncio.get_event_loop().time()
+                        _window_count = 0
+                    _window_count += 1
 
                     dedup_key = f"wiki:seen:{record.platform_content_id}"
                     if await self.is_seen(dedup_key):

@@ -99,6 +99,7 @@ class EmbeddingPipeline:
                         "platform": str(record.platform),
                         "content_type": str(record.content_type),
                         "created_at": record.created_at.isoformat(),
+                        "created_at_ts": record.created_at.timestamp(),
                         "collected_at": record.collected_at.isoformat(),
                         "author_id": record.actor.platform_id,
                         "text_preview": texts[
@@ -183,6 +184,7 @@ async def main() -> None:
     metrics = MetricsCollector(redis)
     qdrant = AsyncQdrantClient(
         host=settings.qdrant.host, port=settings.qdrant.port,
+        api_key=settings.qdrant.api_key or None,
         check_compatibility=False,
     )
 
